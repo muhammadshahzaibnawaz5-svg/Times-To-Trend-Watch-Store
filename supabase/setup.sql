@@ -244,23 +244,32 @@ CREATE INDEX IF NOT EXISTS idx_section_products_product ON section_products(prod
 CREATE INDEX IF NOT EXISTS idx_section_products_sort ON section_products(section_id, sort_order);
 
 -- 5. UPDATED_AT TRIGGERS
-CREATE TRIGGER IF NOT EXISTS update_profiles_updated_at
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
+CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER IF NOT EXISTS update_categories_updated_at
+DROP TRIGGER IF EXISTS update_categories_updated_at ON categories;
+CREATE TRIGGER update_categories_updated_at
   BEFORE UPDATE ON categories FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER IF NOT EXISTS update_products_updated_at
+DROP TRIGGER IF EXISTS update_products_updated_at ON products;
+CREATE TRIGGER update_products_updated_at
   BEFORE UPDATE ON products FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER IF NOT EXISTS update_banners_updated_at
+DROP TRIGGER IF EXISTS update_banners_updated_at ON banners;
+CREATE TRIGGER update_banners_updated_at
   BEFORE UPDATE ON banners FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER IF NOT EXISTS update_sections_updated_at
+DROP TRIGGER IF EXISTS update_sections_updated_at ON sections;
+CREATE TRIGGER update_sections_updated_at
   BEFORE UPDATE ON sections FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER IF NOT EXISTS update_orders_updated_at
+DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
+CREATE TRIGGER update_orders_updated_at
   BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER IF NOT EXISTS update_settings_updated_at
+DROP TRIGGER IF EXISTS update_settings_updated_at ON settings;
+CREATE TRIGGER update_settings_updated_at
   BEFORE UPDATE ON settings FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER IF NOT EXISTS update_pages_updated_at
+DROP TRIGGER IF EXISTS update_pages_updated_at ON pages;
+CREATE TRIGGER update_pages_updated_at
   BEFORE UPDATE ON pages FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-CREATE TRIGGER IF NOT EXISTS update_menus_updated_at
+DROP TRIGGER IF EXISTS update_menus_updated_at ON menus;
+CREATE TRIGGER update_menus_updated_at
   BEFORE UPDATE ON menus FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- 6. ROW LEVEL SECURITY
