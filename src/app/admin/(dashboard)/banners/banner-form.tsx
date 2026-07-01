@@ -19,7 +19,6 @@ export function BannerForm({ onImageUpload, currentImage }: BannerFormProps) {
         </p>{' '}
         <ImageUpload
           bucket="banners"
-          endpoint="/api/upload/imgbb"
           existingUrls={currentImage ? [currentImage] : []}
           onImagesChange={(urls) => {
             if (urls[0]) onImageUpload(urls[0]);

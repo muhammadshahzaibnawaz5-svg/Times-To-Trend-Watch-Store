@@ -54,7 +54,8 @@ export async function POST(request: Request) {
     const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
 
     return NextResponse.json({ url: publicUrl });
-  } catch {
+  } catch (error) {
+    console.error('Upload error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
