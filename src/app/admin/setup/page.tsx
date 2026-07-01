@@ -209,7 +209,7 @@ export default function SetupPage() {
             <p className="text-green-700 text-xs leading-relaxed">
               Your database is configured and ready. Log in at{' '}
               <code className="bg-green-100 rounded px-1">/admin/login</code> with email{' '}
-              <strong>admin@timestotrend.com</strong> and password{' '}
+              <strong>admin@watchstore.com</strong> and password{' '}
               <strong>admin123</strong>.
             </p>
           </div>

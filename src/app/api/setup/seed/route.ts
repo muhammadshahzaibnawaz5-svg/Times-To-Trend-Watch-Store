@@ -23,7 +23,7 @@ export async function POST() {
   });
 
   try {
-    const adminEmail = 'admin@timestotrend.com';
+    const adminEmail = 'admin@watchstore.com';
     const adminPassword = 'admin123';
 
     let adminUserId: string;

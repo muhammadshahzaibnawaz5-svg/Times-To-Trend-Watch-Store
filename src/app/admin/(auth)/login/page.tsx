@@ -152,7 +152,7 @@ export default function AdminLoginPage() {
                       id="email"
                       name="email"
                       type="email"
-                      placeholder="admin@timestotrend.com"
+                      placeholder="admin@watchstore.com"
                       required
                       className="border-border bg-background/50 focus-visible:ring-ring pl-10 text-sm transition-all duration-200 focus-visible:ring-offset-0"
                     />{' '}
