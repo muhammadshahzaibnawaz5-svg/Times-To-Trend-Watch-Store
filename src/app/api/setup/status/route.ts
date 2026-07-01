@@ -4,96 +4,110 @@ import { createServerClient } from '@/lib/supabase/server';
 import { isDevMode } from '@/lib/dev-auth';
 import type { Database } from '@/types/database';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
-  console.log('Setup status route called');
+  const trace: string[] = [];
+  const log = (msg: string) => { console.log(msg); trace.push(msg); };
+
+  log('=== Setup status route called ===');
   const devMode = isDevMode();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const envDebug = {
-    is_dev_mode: devMode,
-    NEXT_PUBLIC_SUPABASE_URL_exists: !!supabaseUrl,
-    NEXT_PUBLIC_SUPABASE_URL_value: supabaseUrl || 'MISSING',
-    SUPABASE_SERVICE_ROLE_KEY_exists: !!serviceKey,
-    SUPABASE_SERVICE_ROLE_KEY_length: serviceKey?.length ?? 0,
-  };
+  log(`isDevMode: ${devMode}`);
+  log(`NEXT_PUBLIC_SUPABASE_URL: ${supabaseUrl || 'MISSING'}`);
+  log(`SUPABASE_SERVICE_ROLE_KEY: ${serviceKey ? `exists (length=${serviceKey.length})` : 'MISSING'}`);
 
-  const result: {
-    supabase_configured: boolean;
-    tables_exist: boolean;
-    admin_user_exists: boolean;
-    admin_count: number;
-    tables_check_error?: string | null;
-    admin_query_error?: string | null;
-    rls_bypassed: boolean;
-    env_debug: typeof envDebug;
-    error?: string;
-  } = {
+  const response: Record<string, unknown> = {
     supabase_configured: !devMode,
     tables_exist: false,
     admin_user_exists: false,
     admin_count: 0,
-    tables_check_error: null,
-    admin_query_error: null,
-    rls_bypassed: !!serviceKey,
-    env_debug: envDebug,
+    _diagnostic: { trace: [] as string[] },
   };
 
   if (devMode) {
-    console.log('Dev mode — returning all true');
-    result.tables_exist = true;
-    result.admin_user_exists = true;
-    return NextResponse.json(result);
-  }
-
-  if (!serviceKey) {
-    console.log('SUPABASE_SERVICE_ROLE_KEY missing — falling back to anon client (RLS may block)');
+    log('Dev mode — returning all true (no actual Supabase query)');
+    response.tables_exist = true;
+    response.admin_user_exists = true;
+    (response._diagnostic as Record<string, unknown>).trace = trace;
+    return NextResponse.json(response);
   }
 
   try {
-    // Use service role client to bypass RLS (setup must work before auth exists)
-    const supabase = serviceKey && supabaseUrl
-      ? createClient<Database>(supabaseUrl, serviceKey, {
-          auth: { autoRefreshToken: false, persistSession: false },
-        })
-      : await createServerClient();
+    let supabase;
 
-    console.log('Supabase client type:', serviceKey ? 'service_role (bypasses RLS)' : 'anon (RLS active)');
+    if (serviceKey && supabaseUrl) {
+      supabase = createClient<Database>(supabaseUrl, serviceKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      log('Using service_role client (bypasses RLS)');
+    } else {
+      supabase = await createServerClient();
+      log('Using anon client (RLS may block unauthenticated requests)');
+    }
 
-    const { error: profileError, count: tablesCount } = await supabase
+    // --- Table existence check ---
+    log('Running table existence check: .from("profiles").select("id", { count: "exact", head: true })');
+    const tableQuery = await supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true });
 
-    result.tables_check_error = profileError?.message ?? null;
-    result.tables_exist = !profileError;
+    log(`Table check response — error: ${tableQuery.error?.message ?? 'null'}, count: ${tableQuery.count}, data: ${JSON.stringify(tableQuery.data)}`);
+    response.tables_check_error = tableQuery.error?.message ?? null;
+    response.tables_count = tableQuery.count;
+    response.tables_exist = !tableQuery.error;
+    response._table_response = {
+      error: tableQuery.error,
+      count: tableQuery.count,
+      data: tableQuery.data,
+    };
 
-    console.log('Tables check — profiles SELECT result:', JSON.stringify({
-      error: profileError?.message ?? null,
-      count: tablesCount,
-      tables_exist: result.tables_exist,
-    }));
-
-    if (result.tables_exist) {
-      const { count, error: adminError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'admin');
-
-      result.admin_query_error = adminError?.message ?? null;
-      result.admin_count = count ?? 0;
-      result.admin_user_exists = (count || 0) > 0;
-
-      console.log('Admin existence query result:', JSON.stringify({
-        error: adminError?.message ?? null,
-        count,
-        admin_user_exists: result.admin_user_exists,
-      }));
+    if (tableQuery.error) {
+      log(`Table check FAILED — cannot proceed to admin check`);
+      (response._diagnostic as Record<string, unknown>).trace = trace;
+      return NextResponse.json(response);
     }
 
-    return NextResponse.json(result);
+    // --- Admin existence check ---
+    log('Running admin existence check: .from("profiles").select("*", { count: "exact", head: true }).eq("role", "admin")');
+    const adminQuery = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'admin');
+
+    log(`Admin query response — error: ${adminQuery.error?.message ?? 'null'}, count: ${adminQuery.count}, data: ${JSON.stringify(adminQuery.data)}`);
+    response.admin_query_error = adminQuery.error?.message ?? null;
+    response.admin_count = adminQuery.count;
+    response.admin_user_exists = (adminQuery.count ?? 0) > 0;
+    response._admin_response = {
+      error: adminQuery.error,
+      count: adminQuery.count,
+      data: adminQuery.data,
+    };
+
+    log(`admin_count=${adminQuery.count}, admin_user_exists=${response.admin_user_exists}`);
+
+    if ((adminQuery.count ?? 0) > 0) {
+      response.admin_user_exists = true;
+      log('Forcing admin_user_exists=true because count > 0');
+    }
+
+    response._query_raw_count = adminQuery.count;
+    response._query_count_type = typeof adminQuery.count;
+    response._is_count_gt_zero = (adminQuery.count ?? 0) > 0;
+
+    (response._diagnostic as Record<string, unknown>).trace = trace;
+    return NextResponse.json(response);
   } catch (err) {
-    result.error = err instanceof Error ? err.message : 'Unknown error';
-    console.log('Unhandled exception in status route:', err);
-    return NextResponse.json(result, { status: 500 });
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    const stack = err instanceof Error ? err.stack : undefined;
+    log(`Unhandled exception: ${msg}`);
+    log(`Stack: ${stack}`);
+    response.error = msg;
+    response.error_stack = stack;
+    (response._diagnostic as Record<string, unknown>).trace = trace;
+    return NextResponse.json(response, { status: 500 });
   }
 }
