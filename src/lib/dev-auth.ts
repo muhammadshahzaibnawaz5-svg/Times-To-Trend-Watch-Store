@@ -19,7 +19,13 @@ export const DEV_ADMIN = {
 };
 
 export function isDevMode(): boolean {
-  if (process.env.NODE_ENV === 'production') return false;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  return url === 'https://xxxxxxxxxxxxxx.supabase.co' || !url.startsWith('https://');
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  // Dev mode when Supabase isn't properly configured
+  if (!url || !anonKey) return true;
+  if (url === 'https://xxxxxxxxxxxxxx.supabase.co') return true;
+  if (url.includes('your-project')) return true;
+  if (anonKey === 'your-anon-key' || anonKey.includes('your-anon')) return true;
+  if (!url.startsWith('https://')) return true;
+  return false;
 }

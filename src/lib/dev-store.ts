@@ -1,11 +1,23 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import path from 'path';
+import os from 'os';
 
 type Row = Record<string, unknown>;
 type TableName = string;
 
 const STORAGE_KEY = '__adnan_dev_store__';
-const DATA_FILE = path.join(process.cwd(), '.dev-data.json');
+const DATA_FILE = path.join(
+  (() => {
+    try {
+      const dir = path.join(os.tmpdir(), 'adnan-dev-store');
+      mkdirSync(dir, { recursive: true });
+      return dir;
+    } catch {
+      return process.cwd();
+    }
+  })(),
+  '.dev-data.json',
+);
 
 const seedMenus = [
   {
@@ -126,7 +138,7 @@ function persistStore(store: Record<TableName, Row[]>): void {
   try {
     writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), 'utf-8');
   } catch (err) {
-    console.error('[dev-store] Failed to persist data:', err);
+    console.error('[dev-store] Failed to persist data to', DATA_FILE, err);
   }
 }
 
