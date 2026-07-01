@@ -79,24 +79,28 @@ export async function deleteCategory(id: string): Promise<ActionResult<null>> {
 }
 
 export async function getAllCategories() {
+  await requireAdmin();
   const supabase = createAdminClient();
   const service = new CategoryService(supabase);
   return service.getAll();
 }
 
 export async function getActiveCategories() {
+  await requireAdmin();
   const supabase = createAdminClient();
   const service = new CategoryService(supabase);
   return service.getActive();
 }
 
 export async function getCategoryBySlug(slug: string) {
+  await requireAdmin();
   const supabase = createAdminClient();
   const service = new CategoryService(supabase);
   return service.getBySlug(slug);
 }
 
 export async function getCategoryById(id: string) {
+  await requireAdmin();
   const supabase = createAdminClient();
   const service = new CategoryService(supabase);
   return service.getById(id);

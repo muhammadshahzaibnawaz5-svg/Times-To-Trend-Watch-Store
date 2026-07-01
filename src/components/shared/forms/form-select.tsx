@@ -39,11 +39,11 @@ export function FormSelect<TFormValues extends FieldValues>({
     <FormField label={label} error={error} required={required} className={className}>
       {' '}
       <Select
+        value={form.watch(name) ?? ''}
         onValueChange={(value) => {
           form.setValue(name, value as any);
           onValueChange?.(value);
         }}
-        defaultValue={form.getValues(name) ?? ''}
         disabled={disabled}
       >
         {' '}

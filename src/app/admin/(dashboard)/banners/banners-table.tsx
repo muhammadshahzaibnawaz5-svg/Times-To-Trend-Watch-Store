@@ -11,6 +11,9 @@ import { EmptyState } from '@/components/admin/empty-state';
 interface BannerRow {
   id: string;
   image_url: string | null;
+  is_active: boolean;
+  title: string;
+  sort_order: number;
 }
 interface BannersTableProps {
   banners: BannerRow[];
@@ -41,33 +44,41 @@ export function BannersTable({ banners }: BannersTableProps) {
   }
   return (
     <div className="space-y-4">
-      {' '}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {' '}
         {banners.map((banner) => (
           <Link
             key={banner.id}
             href={`/admin/banners/${banner.id}`}
             className="group bg-muted hover:ring-primary relative block aspect-[16/9] overflow-hidden rounded-lg border transition-all hover:ring-2"
           >
-            {' '}
             {banner.image_url ? (
               <img
                 src={banner.image_url}
-                alt="Hero banner"
+                alt={banner.title || 'Hero banner'}
                 className="absolute inset-0 h-full w-full object-cover transition-all group-hover:scale-105"
               />
             ) : (
               <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
                 No image
               </div>
-            )}{' '}
+            )}
+            <div className="absolute top-2 left-2 flex gap-1">
+              {banner.is_active && (
+                <span className="rounded-full bg-green-500/80 px-2 py-0.5 text-[10px] font-medium text-white">
+                  Active
+                </span>
+              )}
+              {!banner.is_active && (
+                <span className="rounded-full bg-gray-500/80 px-2 py-0.5 text-[10px] font-medium text-white">
+                  Inactive
+                </span>
+              )}
+            </div>
             <div className="absolute inset-0 flex items-end justify-center bg-black/0 p-2 opacity-0 transition-all group-hover:bg-black/40 group-hover:opacity-100">
-              {' '}
               <span className="text-xs font-medium text-white drop-shadow-sm">
-                Click to replace
-              </span>{' '}
-            </div>{' '}
+                {banner.title || 'Click to replace'}
+              </span>
+            </div>
             <Button
               variant="destructive"
               size="icon"
@@ -78,16 +89,15 @@ export function BannersTable({ banners }: BannersTableProps) {
               }}
               className="absolute top-2 right-2 h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
             >
-              {' '}
-              <Trash2 className="h-4 w-4" />{' '}
-            </Button>{' '}
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </Link>
-        ))}{' '}
-      </div>{' '}
+        ))}
+      </div>
       <p className="text-muted-foreground text-sm">
-        {banners.length} banner{banners.length !== 1 ? 's' : ''} â€” click a banner to replace its
+        {banners.length} banner{banners.length !== 1 ? 's' : ''} click a banner to replace its
         image, or add a new one above.
-      </p>{' '}
+      </p>
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={() => setDeleteId(null)}

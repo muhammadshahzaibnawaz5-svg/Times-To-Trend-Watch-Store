@@ -13,13 +13,18 @@ export class BaseRepository<T extends Record<string, unknown>> {
   ) {}
 
   async findById(id: string): Promise<ActionResult<T>> {
+    console.log(`[${this.tableName}.findById] id=${id}`);
     const { data, error } = await this.supabase
       .from(this.tableName)
       .select('*')
       .eq('id', id)
       .single();
 
-    if (error) return { data: null, error: error.message };
+    if (error) {
+      const msg = `Supabase SELECT failed on ${this.tableName}: ${error.message}`;
+      console.error(`[${this.tableName}.findById] ${msg}`);
+      return { data: null, error: msg };
+    }
     return { data: data as unknown as T, error: null };
   }
 
@@ -37,7 +42,11 @@ export class BaseRepository<T extends Record<string, unknown>> {
 
     const { data, error } = await query;
 
-    if (error) return { data: null, error: error.message };
+    if (error) {
+      const msg = `Supabase SELECT failed on ${this.tableName}: ${error.message}`;
+      console.error(`[${this.tableName}.findAll] ${msg}`);
+      return { data: null, error: msg };
+    }
     return { data: data as unknown as T[], error: null };
   }
 
@@ -73,7 +82,10 @@ export class BaseRepository<T extends Record<string, unknown>> {
       error: { message: string } | null;
     };
 
-    if (error) return { data: [], count: 0, page, pageSize, totalPages: 0 };
+    if (error) {
+      console.error(`[${this.tableName}.findAllPaginated] ${error.message}`);
+      return { data: [], count: 0, page, pageSize, totalPages: 0 };
+    }
 
     return {
       data: (data || []) as T[],
@@ -110,21 +122,36 @@ export class BaseRepository<T extends Record<string, unknown>> {
   }
 
   async update(id: string, values: Partial<T>): Promise<ActionResult<T>> {
+    console.log(`[${this.tableName}.update] id=${id}`);
     const { data, error } = await (this.supabase.from(this.tableName) as unknown as {
       update: (v: unknown) => { eq: (c: string, v: string) => { select: () => { single: () => Promise<ExecResult<unknown>> } } };
     }).update(values).eq('id', id).select().single();
 
-    if (error) return { data: null, error: error.message };
+    if (error) {
+      const msg = `Supabase UPDATE failed on ${this.tableName}: ${error.message}`;
+      console.error(`[${this.tableName}.update] ${msg}`);
+      return { data: null, error: msg };
+    }
+    if (!data) {
+      const msg = `Supabase UPDATE failed on ${this.tableName}: no row found with id=${id}`;
+      console.error(`[${this.tableName}.update] ${msg}`);
+      return { data: null, error: msg };
+    }
     return { data: data as T, error: null };
   }
 
   async delete(id: string): Promise<ActionResult<null>> {
-    const { error } = await this.supabase
+    console.log(`[${this.tableName}.delete] id=${id}`);
+    const { error, count } = await this.supabase
       .from(this.tableName)
       .delete()
-      .eq('id', id);
+      .eq('id', id) as unknown as { error: { message: string } | null; count: number | null };
 
-    if (error) return { data: null, error: error.message };
+    if (error) {
+      const msg = `Supabase DELETE failed on ${this.tableName}: ${error.message}`;
+      console.error(`[${this.tableName}.delete] ${msg}`);
+      return { data: null, error: msg };
+    }
     return { data: null, error: null };
   }
 
