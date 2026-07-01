@@ -3,32 +3,84 @@ import { createClient } from '@supabase/supabase-js';
 import { isDevMode } from '@/lib/dev-auth';
 import type { Database } from '@/types/database';
 
+async function getDebugSnapshot() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return {
+    is_dev_mode: isDevMode(),
+    NEXT_PUBLIC_SUPABASE_URL_exists: !!url,
+    NEXT_PUBLIC_SUPABASE_URL_length: url?.length ?? 0,
+    NEXT_PUBLIC_SUPABASE_URL_is_placeholder: url === 'https://xxxxxxxxxxxxxx.supabase.co',
+    SUPABASE_SERVICE_ROLE_KEY_exists: !!key,
+    SUPABASE_SERVICE_ROLE_KEY_length: key?.length ?? 0,
+  };
+}
+
 export async function POST() {
+  console.log('Seed route called');
+  const debug = await getDebugSnapshot();
+  console.log('Environment debug:', JSON.stringify(debug, null, 2));
+
   if (isDevMode()) {
-    return NextResponse.json({ error: 'Supabase not configured' }, { status: 400 });
+    console.log('isDevMode() returned true — dev mode detected');
+    return NextResponse.json({
+      error: 'Supabase not configured — the seed endpoint requires a real Supabase project',
+      detail: 'Replace NEXT_PUBLIC_SUPABASE_URL in .env.local with your actual Supabase project URL',
+      debug,
+      hint: `Go to https://supabase.com/dashboard → your project → Settings → API → Project URL`,
+    }, { status: 400 });
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceKey) {
-    return NextResponse.json(
-      { error: 'SUPABASE_SERVICE_ROLE_KEY is not configured' },
-      { status: 400 },
-    );
+    console.log('Missing environment variables — SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL');
+    return NextResponse.json({
+      error: 'Missing Supabase credentials',
+      debug,
+    }, { status: 400 });
   }
 
-  const supabase = createClient<Database>(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  console.log('Creating Supabase admin client...');
+  let supabase;
+  try {
+    supabase = createClient<Database>(supabaseUrl, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    console.log('Supabase admin client created successfully');
+  } catch (err) {
+    console.log('createClient() failed:', err);
+    return NextResponse.json({
+      error: 'Failed to create Supabase client',
+      detail: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+      debug,
+    }, { status: 500 });
+  }
 
   try {
     const adminEmail = 'admin@watchstore.com';
     const adminPassword = 'admin123';
 
+    console.log(`Checking if admin user ${adminEmail} already exists...`);
     let adminUserId: string;
+    let userCreated = false;
 
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers();
+    console.log('listUsers() response:', JSON.stringify({
+      error: listError?.message ?? null,
+      user_count: existingUsers?.users?.length ?? 0,
+    }));
+
+    if (listError) {
+      console.log('listUsers() failed:', listError);
+      return NextResponse.json({
+        error: `Failed to list users: ${listError.message}`,
+        status: listError.status,
+        debug,
+      }, { status: 500 });
+    }
 
     const existingUser = existingUsers?.users?.find(
       (u) => u.email === adminEmail,
@@ -36,7 +88,10 @@ export async function POST() {
 
     if (existingUser) {
       adminUserId = existingUser.id;
+      userCreated = false;
+      console.log(`Admin user already exists with id: ${adminUserId}`);
     } else {
+      console.log(`Creating admin user ${adminEmail}...`);
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email: adminEmail,
         password: adminPassword,
@@ -44,25 +99,55 @@ export async function POST() {
         user_metadata: { full_name: 'Admin User' },
       });
 
-      if (createError || !newUser?.user) {
-        return NextResponse.json(
-          { error: createError?.message || 'Failed to create admin user' },
-          { status: 500 },
-        );
+      console.log('createUser() response:', JSON.stringify({
+        error: createError?.message ?? null,
+        user_id: newUser?.user?.id ?? null,
+        user_email: newUser?.user?.email ?? null,
+      }));
+
+      if (createError) {
+        return NextResponse.json({
+          error: `Failed to create admin user: ${createError.message}`,
+          status: createError.status,
+          debug,
+        }, { status: 500 });
       }
+
+      if (!newUser?.user) {
+        return NextResponse.json({
+          error: 'createUser() returned success but no user object',
+          detail: JSON.stringify(newUser),
+          debug,
+        }, { status: 500 });
+      }
+
       adminUserId = newUser.user.id;
+      userCreated = true;
+      console.log(`Admin user created with id: ${adminUserId}`);
     }
 
-    const { error: profileError } = await supabase.from('profiles').upsert({
+    console.log('Upserting admin profile...');
+    const { error: profileError, data: profileData } = await supabase.from('profiles').upsert({
       id: adminUserId,
       email: adminEmail,
       full_name: 'Admin User',
       role: 'admin',
       phone: '+92-300-1234567',
-    });
+    }).select();
+
+    console.log('Profile upsert response:', JSON.stringify({
+      error: profileError?.message ?? null,
+      data: profileData ?? null,
+    }));
 
     if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 500 });
+      return NextResponse.json({
+        error: `Profile upsert failed: ${profileError.message}`,
+        code: profileError.code,
+        details: profileError.details,
+        hint: profileError.hint,
+        debug,
+      }, { status: 500 });
     }
 
     const categories = [
@@ -150,16 +235,26 @@ export async function POST() {
       return NextResponse.json({ error: `Banner seed failed: ${bannerError.message}` }, { status: 500 });
     }
 
+    const message = userCreated
+      ? 'Database seeded successfully'
+      : 'Admin user already exists — profile and seed data upserted';
+
+    console.log(`Seed complete: ${message}`);
     return NextResponse.json({
       success: true,
-      message: 'Database seeded successfully',
+      message,
       admin_email: adminEmail,
       admin_password: adminPassword,
+      admin_exists: !userCreated,
+      user_created: userCreated,
+      admin_user_id: adminUserId,
     });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Unknown error' },
-      { status: 500 },
-    );
+    console.log('Unhandled exception in seed route:', err);
+    return NextResponse.json({
+      error: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined,
+      debug,
+    }, { status: 500 });
   }
 }
