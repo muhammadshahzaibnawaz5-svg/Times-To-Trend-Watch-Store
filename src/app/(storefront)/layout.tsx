@@ -23,7 +23,14 @@ async function getHeaderData() {
   const storeNameSetting = settingsArr.find(
     (s: { key: string; value: string }) => s.key === 'store_name',
   );
-  const storeName = storeNameSetting ? JSON.parse(storeNameSetting.value) : 'Times to Trend';
+  let storeName = 'Times to Trend';
+  if (storeNameSetting) {
+    try {
+      storeName = JSON.parse(storeNameSetting.value);
+    } catch {
+      storeName = storeNameSetting.value;
+    }
+  }
   return { navLinks, storeName };
 }
 async function getFooterData() {

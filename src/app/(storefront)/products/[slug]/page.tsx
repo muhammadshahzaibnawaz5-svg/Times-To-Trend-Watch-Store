@@ -125,7 +125,7 @@ export default async function ProductDetailPage({ params }: Props) {
     }>) || [];
 
   const avgRating = reviews.length
-    ? reviews.reduce((s: number, r) => s + r.rating, 0) / reviews.length
+    ? reviews.reduce((s: number, r) => s + Number(r.rating || 0), 0) / reviews.length
     : 0;
 
   return (
@@ -170,7 +170,7 @@ export default async function ProductDetailPage({ params }: Props) {
               <div className="mt-3 flex items-center gap-2">
                 <RatingStars rating={avgRating} size="sm" />
                 <span className="text-muted-foreground text-xs">
-                  {avgRating.toFixed(1)} ({reviews.length}{' '}
+                  {(avgRating || 0).toFixed(1)} ({reviews.length}{' '}
                   {reviews.length === 1 ? 'review' : 'reviews'})
                 </span>
               </div>

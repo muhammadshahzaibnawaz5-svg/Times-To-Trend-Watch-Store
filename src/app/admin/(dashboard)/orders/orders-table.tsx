@@ -42,7 +42,7 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
     },
     {
       header: 'Total',
-      accessorKey: (item) => `$${Number(item.total_amount).toFixed(2)}`,
+      accessorKey: (item) => `$${(Number(item.total_amount) || 0).toFixed(2)}`,
       sortable: true,
     },
     {

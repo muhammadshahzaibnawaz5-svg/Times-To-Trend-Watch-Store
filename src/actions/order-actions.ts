@@ -88,17 +88,24 @@ export async function checkoutAction(input: CreateOrderInput): Promise<ActionRes
 
 /** @deprecated Use checkoutAction directly with typed input instead */
 export async function createOrder(formData: FormData): Promise<ActionResult<Order>> {
-  return checkoutAction({
-    shippingAddress: JSON.parse(formData.get('shippingAddress') as string),
-    billingAddress: formData.get('billingAddress')
+  try {
+    const shippingAddress = JSON.parse(formData.get('shippingAddress') as string);
+    const billingAddress = formData.get('billingAddress')
       ? JSON.parse(formData.get('billingAddress') as string)
-      : undefined,
-    paymentMethod: String(formData.get('paymentMethod') || ''),
-    notes: formData.get('notes') ? String(formData.get('notes')) : undefined,
-    items: JSON.parse(formData.get('items') as string),
-    shippingAmount: Number(formData.get('shippingAmount')) || 0,
-    discountAmount: Number(formData.get('discountAmount')) || 0,
-  });
+      : undefined;
+    const items = JSON.parse(formData.get('items') as string);
+    return checkoutAction({
+      shippingAddress,
+      billingAddress,
+      paymentMethod: String(formData.get('paymentMethod') || ''),
+      notes: formData.get('notes') ? String(formData.get('notes')) : undefined,
+      items,
+      shippingAmount: Number(formData.get('shippingAmount')) || 0,
+      discountAmount: Number(formData.get('discountAmount')) || 0,
+    });
+  } catch {
+    return { data: null, error: 'Invalid form data format' };
+  }
 }
 
 export async function createAndPayAction(

@@ -27,15 +27,15 @@ export async function AdminDashboard() {
     .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
     .order('created_at', { ascending: true });
   const revenueByDate = (revenueData || []).reduce<Record<string, number>>((acc, order) => {
-    const date = new Date(order.created_at).toISOString().split('T')[0];
-    acc[date] = (acc[date] || 0) + Number(order.total_amount);
+    const date = new Date(order.created_at ?? Date.now()).toISOString().split('T')[0];
+    acc[date] = (acc[date] || 0) + (Number(order.total_amount) || 0);
     return acc;
   }, {});
   const chartData = Object.entries(revenueByDate)
     .map(([date, revenue]) => ({ date, revenue }))
     .sort((a, b) => a.date.localeCompare(b.date));
   const totalRevenue = (revenueData || []).reduce(
-    (sum, order) => sum + Number(order.total_amount),
+    (sum, order) => sum + (Number(order.total_amount) || 0),
     0,
   );
   return (

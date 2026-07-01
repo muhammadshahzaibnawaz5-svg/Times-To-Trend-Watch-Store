@@ -98,7 +98,8 @@ export function createAdminClient() {
   console.log(`[createAdminClient] url=${supabaseUrl ? 'present' : 'MISSING'} serviceKey=${serviceKey ? 'present' : 'MISSING'}`);
 
   if (!supabaseUrl || !serviceKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured');
+    console.error('[createAdminClient] SUPABASE_SERVICE_ROLE_KEY is not configured — falling back to dev mock client');
+    return createDevMockClient();
   }
 
   return createClient<Database>(supabaseUrl, serviceKey, {

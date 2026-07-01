@@ -33,7 +33,7 @@ export function ChartRevenue({ data }: { data: RevenueDataPoint[] }) {
               tickFormatter={(val: number) => `$${val}`}
             />
             <Tooltip
-              formatter={(value: number) => [`$${value.toFixed(2)}`, 'Revenue']}
+              formatter={(value: number) => [`$${(value || 0).toFixed(2)}`, 'Revenue']}
               labelFormatter={(label: string) => new Date(label).toLocaleDateString()}
             />
             <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />

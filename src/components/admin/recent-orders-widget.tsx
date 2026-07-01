@@ -37,7 +37,7 @@ export async function RecentOrdersWidget() {
             </div>{' '}
             <div className="text-right">
               {' '}
-              <p className="font-medium">${Number(order.total_amount).toFixed(2)}</p>{' '}
+              <p className="font-medium">${(Number(order.total_amount) || 0).toFixed(2)}</p>{' '}
               <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 capitalize">
                 {' '}
                 {order.status}{' '}

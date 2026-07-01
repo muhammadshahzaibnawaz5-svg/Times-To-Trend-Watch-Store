@@ -86,14 +86,12 @@ export async function getAllCategories() {
 }
 
 export async function getActiveCategories() {
-  await requireAdmin();
   const supabase = createAdminClient();
   const service = new CategoryService(supabase);
   return service.getActive();
 }
 
 export async function getCategoryBySlug(slug: string) {
-  await requireAdmin();
   const supabase = createAdminClient();
   const service = new CategoryService(supabase);
   return service.getBySlug(slug);

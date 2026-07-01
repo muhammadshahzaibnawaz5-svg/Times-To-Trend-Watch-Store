@@ -9,7 +9,7 @@ export async function TodayStatsWidget() {
     .select('total_amount')
     .gte('created_at', todayStart.toISOString());
   const totalRevenueToday = (todayOrders || []).reduce(
-    (sum, order) => sum + Number(order.total_amount),
+    (sum, order) => sum + (Number(order.total_amount) || 0),
     0,
   );
   const orderCountToday = todayOrders?.length || 0;
