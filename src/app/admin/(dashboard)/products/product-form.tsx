@@ -116,6 +116,7 @@ export function ProductForm({ onSubmit, pending, defaultValues }: ProductFormPro
         <p className="text-sm font-medium">Images</p>{' '}
         <ImageUpload
           bucket="products"
+          endpoint="/api/upload/imgbb"
           existingUrls={imageUrls}
           onImagesChange={(urls) =>
             form.setValue(
