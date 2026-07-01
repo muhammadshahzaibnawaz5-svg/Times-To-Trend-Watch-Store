@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createServerClient, createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { createServiceAction } from '@/lib/create-service-action';
 import { ProductService } from '@/services/product-service';
 import { requireAdmin } from '@/components/admin/require-admin';
@@ -12,7 +12,9 @@ import type { ProductFormValues } from '@/app/admin/(dashboard)/products/product
 
 export async function getProductsAdmin(params?: AdminProductParams): Promise<PaginatedResult<Product>> {
   await requireAdmin();
-  return createServiceAction(ProductService, 'getAllAdmin', params);
+  const supabase = createAdminClient();
+  const service = new ProductService(supabase);
+  return service.getAllAdmin(params);
 }
 
 export async function createProduct(data: ProductFormValues): Promise<ActionResult<Product>> {

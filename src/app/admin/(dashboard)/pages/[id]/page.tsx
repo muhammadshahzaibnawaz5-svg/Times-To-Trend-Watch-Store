@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/components/admin/require-admin';
 import { PageService } from '@/services/page-service';
 import { EditPageClient } from './edit-client';
@@ -7,7 +7,7 @@ import { EditPageClient } from './edit-client';
 export default async function EditPagePage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new PageService(supabase);
   const { data: page } = await service.getById(id);
 

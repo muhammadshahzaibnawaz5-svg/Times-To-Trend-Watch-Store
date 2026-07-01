@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { createServiceAction } from '@/lib/create-service-action';
 import { MenuService } from '@/services/menu-service';
 import { requireAdmin } from '@/components/admin/require-admin';
@@ -19,7 +19,7 @@ export async function getMenuByLocation(location: string) {
 
 export async function createMenu(data: CreateMenuInput): Promise<ActionResult<Menu>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new MenuService(supabase);
 
   const result = await service.create({
@@ -34,7 +34,7 @@ export async function createMenu(data: CreateMenuInput): Promise<ActionResult<Me
 
 export async function updateMenu(id: string, data: CreateMenuInput): Promise<ActionResult<Menu>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new MenuService(supabase);
 
   const result = await service.update(id, {
@@ -49,7 +49,7 @@ export async function updateMenu(id: string, data: CreateMenuInput): Promise<Act
 
 export async function deleteMenu(id: string): Promise<ActionResult<null>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new MenuService(supabase);
   const result = await service.delete(id);
   if (!result.error) revalidatePath('/admin/menus');

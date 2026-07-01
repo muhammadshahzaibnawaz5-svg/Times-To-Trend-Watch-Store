@@ -1,11 +1,9 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@/lib/supabase/server';
+import { createServerClient, createAdminClient } from '@/lib/supabase/server';
 import { isDevMode, DEV_ADMIN, DEV_MODE_KEY } from '@/lib/dev-auth';
 import { initializeDevStore } from '@/lib/dev-store';
 import type { User } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
 import type { Profile } from '@/types/user';
 
 export async function requireAdmin() {
@@ -36,19 +34,11 @@ export async function requireAdmin() {
 
   console.log('[requireAdmin] production mode');
   const baseSupabase = await createServerClient();
+  const adminSupabase = createAdminClient();
 
-  // Use service role client for tables check to bypass RLS
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const tablesSupabase = supabaseUrl && serviceKey
-    ? createClient<Database>(supabaseUrl, serviceKey, {
-        auth: { autoRefreshToken: false, persistSession: false },
-      })
-    : baseSupabase;
+  console.log('[requireAdmin] tables check using admin client');
 
-  console.log(`[requireAdmin] tables check using: ${supabaseUrl && serviceKey ? 'service_role' : 'anon'} client`);
-
-  const { error: tablesCheck, count: tableCount } = await tablesSupabase
+  const { error: tablesCheck, count: tableCount } = await adminSupabase
     .from('profiles')
     .select('id', { count: 'exact', head: true });
 
@@ -67,10 +57,8 @@ export async function requireAdmin() {
     redirect('/admin/login');
   }
 
-  // Use service role client for profile query too, to bypass RLS
-  const profileClient = tablesSupabase;
-
-  const { data: profile, error: profileError } = await profileClient
+  // Use admin client for profile query to bypass RLS
+  const { data: profile, error: profileError } = await adminSupabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)

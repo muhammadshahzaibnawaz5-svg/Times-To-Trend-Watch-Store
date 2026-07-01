@@ -1,12 +1,12 @@
 import { notFound } from 'next/navigation';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/components/admin/require-admin';
 import { OrderDetail } from './order-detail';
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const { data: order } = await supabase
     .from('orders')

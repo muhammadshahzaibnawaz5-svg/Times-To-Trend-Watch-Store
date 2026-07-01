@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient, createServerClient } from '@/lib/supabase/server';
 import { createServiceAction } from '@/lib/create-service-action';
 import { createOrderSchema, type CreateOrderInput } from '@/schemas/order-schema';
 import { confirmPaymentSchema } from '@/schemas/payment-schema';
@@ -185,7 +185,7 @@ export async function updateOrderStatus(
   notes?: string,
 ): Promise<ActionResult<Order>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new OrderService(supabase);
   const result = await service.updateStatus(id, status, notes);
   if (!result.error) revalidatePath('/admin/orders');
@@ -220,7 +220,7 @@ export async function updatePaymentStatusAction(
   paymentStatus: string,
 ): Promise<ActionResult<Order>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new OrderService(supabase);
   const result = await service.updatePaymentStatus(orderId, paymentStatus);
   if (!result.error) revalidatePath('/admin/orders');
@@ -232,7 +232,7 @@ export async function markHalfPaymentDeliveredAction(
   totalAmount: number,
 ): Promise<ActionResult<Order>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new OrderService(supabase);
   const result = await service.markHalfPaymentDelivered(orderId, totalAmount);
   if (!result.error) revalidatePath('/admin/orders');

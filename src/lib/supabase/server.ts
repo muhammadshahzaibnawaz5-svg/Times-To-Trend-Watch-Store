@@ -88,11 +88,17 @@ export async function createServerClient() {
 }
 
 export function createAdminClient() {
+  if (isDevMode()) {
+    return createDevMockClient();
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  console.log(`[createAdminClient] url=${supabaseUrl ? 'present' : 'MISSING'} serviceKey=${serviceKey ? 'present' : 'MISSING'}`);
+
   if (!supabaseUrl || !serviceKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured — admin operations require it');
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured');
   }
 
   return createClient<Database>(supabaseUrl, serviceKey, {

@@ -16,7 +16,9 @@ export async function getAllBanners() {
 
 export async function getAllBannersAdmin(params?: AdminBannerParams): Promise<PaginatedResult<Banner>> {
   await requireAdmin();
-  return createServiceAction(BannerService, 'getAllAdmin', params);
+  const supabase = createAdminClient();
+  const service = new BannerService(supabase);
+  return service.getAllAdmin(params);
 }
 
 export async function getActiveBanners() {

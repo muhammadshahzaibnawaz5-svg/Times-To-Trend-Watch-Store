@@ -1,13 +1,13 @@
 ﻿import { Suspense } from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/admin/page-header';
 import { BannersTable } from './banners-table';
 import { requireAdmin } from '@/components/admin/require-admin';
 async function BannersData() {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const { data: banners } = await supabase
     .from('banners')
     .select('id, image_url')

@@ -1,13 +1,13 @@
 ﻿import { Suspense } from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/components/admin/require-admin';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/admin/page-header';
 import { SectionsTable } from './sections-table';
 async function SectionsData() {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const { data: sections } = await supabase
     .from('sections')
     .select('*')

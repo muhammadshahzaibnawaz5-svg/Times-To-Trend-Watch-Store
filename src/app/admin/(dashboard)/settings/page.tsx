@@ -1,10 +1,10 @@
 ﻿import { Suspense } from 'react';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/components/admin/require-admin';
 import { PageHeader } from '@/components/admin/page-header';
 import { SettingsEditor } from './settings-editor';
 async function SettingsData() {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const { data: settings } = await supabase
     .from('settings')
     .select('*')

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/components/admin/require-admin';
 import { ProductService } from '@/services/product-service';
 import { EditProductForm } from './edit-form';
@@ -8,7 +8,7 @@ import { ProductSectionManager } from './product-section-manager';
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new ProductService(supabase);
   const { data: product } = await service.getById(id);
 

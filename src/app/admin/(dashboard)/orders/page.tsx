@@ -1,10 +1,10 @@
 ﻿import { Suspense } from 'react';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/components/admin/require-admin';
 import { PageHeader } from '@/components/admin/page-header';
 import { OrdersTable } from './orders-table';
 async function OrdersData() {
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const { data: orders } = await supabase
     .from('orders')
     .select('*, profiles(full_name, email)')

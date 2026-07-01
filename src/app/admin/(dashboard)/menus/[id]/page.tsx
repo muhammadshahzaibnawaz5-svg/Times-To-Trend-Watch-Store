@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/components/admin/require-admin';
 import { MenuService } from '@/services/menu-service';
 import { EditMenuClient } from './edit-menu-client';
@@ -7,7 +7,7 @@ import { EditMenuClient } from './edit-menu-client';
 export default async function EditMenuPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new MenuService(supabase);
   const { data: menu } = await service.getById(id);
 

@@ -1,7 +1,7 @@
 ﻿import { Suspense } from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/admin/page-header';
 import { PagesTable } from './pages-table';
@@ -12,7 +12,7 @@ interface PageProps {
 }
 async function PagesData({ searchParams }: PageProps) {
   const { page } = await searchParams;
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new PageService(supabase);
   const result = await service.getAllAdmin(page ? Number(page) : 1, 20);
   return (

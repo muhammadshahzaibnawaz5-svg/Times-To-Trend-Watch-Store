@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/components/admin/require-admin';
 import { CategoryService } from '@/services/category-service';
 import { EditCategoryForm } from './edit-form';
@@ -7,7 +7,7 @@ import { EditCategoryForm } from './edit-form';
 export default async function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new CategoryService(supabase);
   const { data: category } = await service.getById(id);
 
