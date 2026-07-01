@@ -98,15 +98,16 @@ function MobilePaymentDialog({
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('bucket', 'payments');
     try {
-      const res = await fetch('/api/upload/imgbb', { method: 'POST', body: formData });
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
       const data = await res.json();
-      if (!res.ok || !data.image_url) {
+      if (!res.ok || !data.url) {
         toast.error(data.error || 'Upload failed');
         setScreenshotPreview('');
         return;
       }
-      setScreenshotUrl(data.image_url);
+      setScreenshotUrl(data.url);
       toast.success('Payment screenshot uploaded');
     } catch {
       toast.error('Upload failed. Please try again.');
@@ -288,15 +289,16 @@ function StripePaymentDialog({
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('bucket', 'payments');
     try {
-      const res = await fetch('/api/upload/imgbb', { method: 'POST', body: formData });
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
       const data = await res.json();
-      if (!res.ok || !data.image_url) {
+      if (!res.ok || !data.url) {
         toast.error(data.error || 'Upload failed');
         setScreenshotPreview('');
         return;
       }
-      setScreenshotUrl(data.image_url);
+      setScreenshotUrl(data.url);
       toast.success('Payment screenshot uploaded');
     } catch {
       toast.error('Upload failed. Please try again.');
@@ -440,15 +442,16 @@ function HalfPaymentDialog({
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('bucket', 'payments');
     try {
-      const res = await fetch('/api/upload/imgbb', { method: 'POST', body: formData });
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
       const data = await res.json();
-      if (!res.ok || !data.image_url) {
+      if (!res.ok || !data.url) {
         toast.error(data.error || 'Upload failed');
         setScreenshotPreview('');
         return;
       }
-      setScreenshotUrl(data.image_url);
+      setScreenshotUrl(data.url);
       toast.success('Screenshot uploaded');
     } catch {
       toast.error('Upload failed. Please try again.');

@@ -4,7 +4,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { requireApiAuth, getApiUserId } from '@/lib/api-auth';
 import { SUPABASE_STORAGE } from '@/constants';
 
-const allowedBuckets = z.enum(['products', 'avatars', 'banners', 'categories', 'pages']);
+const allowedBuckets = z.enum(['products', 'avatars', 'banners', 'categories', 'pages', 'payments']);
 
 export async function POST(request: Request) {
   try {
