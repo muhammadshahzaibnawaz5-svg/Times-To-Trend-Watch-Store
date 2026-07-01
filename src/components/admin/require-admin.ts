@@ -27,6 +27,15 @@ export async function requireAdmin() {
   }
 
   const supabase = await createServerClient();
+
+  const { error: tablesCheck } = await supabase
+    .from('profiles')
+    .select('id', { count: 'exact', head: true });
+
+  if (tablesCheck) {
+    redirect('/admin/setup');
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect('/admin/login');
