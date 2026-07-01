@@ -1,0 +1,51 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# supabase
+supabase/.temp
+
+# dev mode data persistence
+.dev-data.json
+
+# Windows reserved names
+nul
+
+# debug/log files
+debug-parse.js
+fix-files.js
+fix-files2.js
+dev-*.log
+dev_error.txt
+dev_output.txt
