@@ -6,18 +6,7 @@ type Row = Record<string, unknown>;
 type TableName = string;
 
 const STORAGE_KEY = '__adnan_dev_store__';
-const DATA_FILE = path.join(
-  (() => {
-    try {
-      const dir = path.join(os.tmpdir(), 'adnan-dev-store');
-      mkdirSync(dir, { recursive: true });
-      return dir;
-    } catch {
-      return process.cwd();
-    }
-  })(),
-  '.dev-data.json',
-);
+const KV_KEY = 'adnan_dev_store';
 
 const seedMenus = [
   {
@@ -134,7 +123,20 @@ function clone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
-function persistStore(store: Record<TableName, Row[]>): void {
+const DATA_FILE = path.join(
+  (() => {
+    try {
+      const dir = path.join(os.tmpdir(), 'adnan-dev-store');
+      mkdirSync(dir, { recursive: true });
+      return dir;
+    } catch {
+      return process.cwd();
+    }
+  })(),
+  '.dev-data.json',
+);
+
+function persistToFile(store: Record<TableName, Row[]>): void {
   try {
     writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), 'utf-8');
   } catch (err) {
@@ -142,7 +144,7 @@ function persistStore(store: Record<TableName, Row[]>): void {
   }
 }
 
-function loadStore(): Record<TableName, Row[]> | null {
+function loadFromFile(): Record<TableName, Row[]> | null {
   try {
     if (existsSync(DATA_FILE)) {
       const content = readFileSync(DATA_FILE, 'utf-8');
@@ -154,11 +156,24 @@ function loadStore(): Record<TableName, Row[]> | null {
   return null;
 }
 
+function useKV(): boolean {
+  return !!process.env.KV_URL;
+}
+
+async function persistToKV(store: Record<TableName, Row[]>): Promise<void> {
+  try {
+    const { kv } = await import('@vercel/kv');
+    await kv.set(KV_KEY, store);
+  } catch (err) {
+    console.error('[dev-store] KV persist failed:', err);
+  }
+}
+
 function getMutableStore(): Record<TableName, Row[]> {
   if (typeof globalThis !== 'undefined') {
     const g = globalThis as Record<string, unknown>;
     if (!g[STORAGE_KEY]) {
-      const persisted = loadStore();
+      const persisted = loadFromFile();
       if (persisted) {
         g[STORAGE_KEY] = persisted;
       } else {
@@ -167,12 +182,48 @@ function getMutableStore(): Record<TableName, Row[]> {
           store[key] = clone(INITIAL_TABLES[key]);
         }
         g[STORAGE_KEY] = store;
-        persistStore(store);
+        persistToFile(store);
       }
     }
     return g[STORAGE_KEY] as Record<TableName, Row[]>;
   }
   return INITIAL_TABLES;
+}
+
+function persistStore(store: Record<TableName, Row[]>): void {
+  persistToFile(store);
+  if (useKV()) {
+    persistToKV(store);
+  }
+}
+
+export async function initializeDevStore(): Promise<void> {
+  if (!useKV() || typeof globalThis === 'undefined') return;
+  const g = globalThis as Record<string, unknown>;
+  if (g[STORAGE_KEY]) return;
+
+  try {
+    const { kv } = await import('@vercel/kv');
+    const data = await kv.get<Record<TableName, Row[]>>(KV_KEY);
+    if (data) {
+      g[STORAGE_KEY] = data;
+      console.log('[dev-store] Loaded from KV');
+    } else {
+      const store: Record<string, Row[]> = {};
+      for (const key of Object.keys(INITIAL_TABLES)) {
+        store[key] = clone(INITIAL_TABLES[key]);
+      }
+      g[STORAGE_KEY] = store;
+      persistToKV(store);
+      console.log('[dev-store] Seeded fresh data to KV');
+    }
+  } catch (err) {
+    console.error('[dev-store] KV init failed, using file/seed fallback:', err);
+    if (!g[STORAGE_KEY]) {
+      const persisted = loadFromFile();
+      g[STORAGE_KEY] = persisted || clone(INITIAL_TABLES);
+    }
+  }
 }
 
 export function getTableData(table: string): Row[] {
@@ -238,12 +289,11 @@ export function devQuery(table: string) {
     return result;
   }
 
-  const exec = async () => {
-    const rows = applyFilters();
-    if (countMode) {
-      return { data: rows, error: null, count: filtered.length };
-    }
-    return { data: rows, error: null, count: null };
+  const execThenable = {
+    then: (resolve: (v: { data: Row[]; error: null; count: number | null }) => void) => {
+      const rows = applyFilters();
+      resolve({ data: rows, error: null, count: countMode ? filtered.length : null });
+    },
   };
 
   const methods = {
@@ -283,7 +333,7 @@ export function devQuery(table: string) {
           data.splice(idx, 1);
           persistStore(getMutableStore());
         }
-        return exec;
+        return execThenable;
       },
     }),
     upsert: (values: Row, opts?: { onConflict?: string; ignoreDuplicates?: boolean }) => {

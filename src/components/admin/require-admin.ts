@@ -2,11 +2,13 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import { isDevMode, DEV_ADMIN, DEV_MODE_KEY } from '@/lib/dev-auth';
+import { initializeDevStore } from '@/lib/dev-store';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/types/user';
 
 export async function requireAdmin() {
   if (isDevMode()) {
+    await initializeDevStore();
     const cookieStore = await cookies();
     const devSession = cookieStore.get(DEV_MODE_KEY);
     if (devSession?.value === DEV_ADMIN.id) {

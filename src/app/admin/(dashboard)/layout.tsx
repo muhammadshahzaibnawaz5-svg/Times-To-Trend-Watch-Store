@@ -3,6 +3,7 @@ import { requireAdmin } from '@/components/admin/require-admin';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 import { AdminHeader } from '@/components/admin/admin-header';
 import { CommandPalette } from '@/components/admin/command-palette';
+import { EnvBanner } from '@/components/admin/env-banner';
 function AdminLayoutSkeleton() {
   return (
     <div className="flex h-screen animate-pulse">
@@ -43,6 +44,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
       <AdminSidebar />{' '}
       <div className="flex flex-1 flex-col">
         {' '}
+        <EnvBanner />
         <AdminHeader user={user} profile={profile} />{' '}
         <main className="flex-1 overflow-y-auto p-6">
           {' '}
