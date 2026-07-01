@@ -1,6 +1,7 @@
 ﻿import type { Metadata, Viewport } from 'next';
 import { Inter, Cormorant_Garamond } from 'next/font/google';
 import { Toaster } from 'sonner';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { absoluteUrl } from '@/lib/seo';
 import './globals.css';
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-sans' });
@@ -49,7 +50,7 @@ export const viewport: Viewport = { themeColor: '#ffffff', width: 'device-width'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`} suppressHydrationWarning><body className={inter.className}>
-        {children}
+        <NuqsAdapter>{children}</NuqsAdapter>
         <Toaster richColors position="top-right" />
       </body></html>
   );
