@@ -85,11 +85,27 @@ export class BaseRepository<T extends Record<string, unknown>> {
   }
 
   async insert(values: Partial<T>): Promise<ActionResult<T>> {
-    const { data, error } = await (this.supabase.from(this.tableName) as unknown as {
-      insert: (v: unknown) => { select: () => { single: () => Promise<ExecResult<unknown>> } };
+    console.log(`[BaseRepository.insert] table=${this.tableName} values=`, JSON.stringify(values, (k, v) =>
+      k === 'password' ? '***' : v
+    ));
+
+    const { data, error, status, statusText } = await (this.supabase.from(this.tableName) as unknown as {
+      insert: (v: unknown) => {
+        select: () => {
+          single: () => Promise<{ data: unknown; error: unknown; status: number; statusText: string }>
+        }
+      };
     }).insert(values).select().single();
 
-    if (error) return { data: null, error: error.message };
+    console.log(`[BaseRepository.insert] table=${this.tableName} status=${status} statusText=${statusText} error=${error ? JSON.stringify(error) : 'null'} data=${data ? 'present' : 'null'}`);
+
+    if (error) {
+      const msg = typeof error === 'object' && error !== null
+        ? ((error as Record<string, unknown>).message as string) || JSON.stringify(error)
+        : String(error);
+      console.log(`[BaseRepository.insert] FAILED: ${msg}`);
+      return { data: null, error: msg };
+    }
     return { data: data as T, error: null };
   }
 

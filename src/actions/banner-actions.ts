@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { createServiceAction } from '@/lib/create-service-action';
 import { bannerSchema } from '@/schemas/banner-schema';
 import { BannerService } from '@/services/banner-service';
@@ -28,8 +28,9 @@ export async function getBannerById(id: string) {
 }
 
 export async function createBanner(formData: FormData): Promise<ActionResult<Banner>> {
+  console.log('[createBanner] called');
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new BannerService(supabase);
 
   const parsed = bannerSchema.safeParse({
@@ -55,8 +56,9 @@ export async function createBanner(formData: FormData): Promise<ActionResult<Ban
 }
 
 export async function updateBanner(id: string, formData: FormData): Promise<ActionResult<Banner>> {
+  console.log('[updateBanner] called id=', id);
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new BannerService(supabase);
 
   const parsed = bannerSchema.safeParse({
@@ -76,8 +78,9 @@ export async function updateBanner(id: string, formData: FormData): Promise<Acti
 }
 
 export async function deleteBanner(id: string): Promise<ActionResult<null>> {
+  console.log('[deleteBanner] called id=', id);
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new BannerService(supabase);
   const result = await service.delete(id);
   if (!result.error) revalidatePath('/admin/banners');

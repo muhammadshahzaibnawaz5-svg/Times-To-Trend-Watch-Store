@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createServerClient } from '@/lib/supabase/server';
+import { createServerClient, createAdminClient } from '@/lib/supabase/server';
 import { createServiceAction } from '@/lib/create-service-action';
 import { ProductService } from '@/services/product-service';
 import { requireAdmin } from '@/components/admin/require-admin';
@@ -16,8 +16,9 @@ export async function getProductsAdmin(params?: AdminProductParams): Promise<Pag
 }
 
 export async function createProduct(data: ProductFormValues): Promise<ActionResult<Product>> {
+  console.log('[createProduct] called with data:', JSON.stringify({ ...data, images: '...' }));
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new ProductService(supabase);
 
   const result = await service.create({
@@ -40,13 +41,15 @@ export async function createProduct(data: ProductFormValues): Promise<ActionResu
     og_image: data.og_image || null,
   } as any);
 
+  console.log('[createProduct] result:', JSON.stringify({ error: result.error, data: result.data ? 'present' : 'null' }));
   if (!result.error) revalidatePath('/admin/products');
   return result;
 }
 
 export async function updateProduct(id: string, data: ProductFormValues): Promise<ActionResult<Product>> {
+  console.log('[updateProduct] called id=', id);
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new ProductService(supabase);
 
   const result = await service.update(id, {
@@ -74,8 +77,9 @@ export async function updateProduct(id: string, data: ProductFormValues): Promis
 }
 
 export async function toggleProductStatus(id: string): Promise<ActionResult<Product>> {
+  console.log('[toggleProductStatus] called id=', id);
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new ProductService(supabase);
   const result = await service.toggleStatus(id);
   if (!result.error) revalidatePath('/admin/products');
@@ -83,8 +87,9 @@ export async function toggleProductStatus(id: string): Promise<ActionResult<Prod
 }
 
 export async function deleteProduct(id: string): Promise<ActionResult<null>> {
+  console.log('[deleteProduct] called id=', id);
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new ProductService(supabase);
   const result = await service.delete(id);
   if (!result.error) revalidatePath('/admin/products');

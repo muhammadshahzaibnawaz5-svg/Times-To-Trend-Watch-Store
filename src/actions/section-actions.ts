@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { createServiceAction } from '@/lib/create-service-action';
 import { sectionSchema } from '@/schemas/section-schema';
 import { sectionSettingsSchemas } from '@/sections/settings-schemas';
@@ -24,7 +24,7 @@ export async function getSectionById(id: string) {
 
 export async function toggleSectionActive(id: string): Promise<ActionResult<Section>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new SectionService(supabase);
   const result = await service.toggleActive(id);
   if (!result.error) revalidatePath('/admin/sections');
@@ -33,7 +33,7 @@ export async function toggleSectionActive(id: string): Promise<ActionResult<Sect
 
 export async function reorderSections(items: { id: string; sort_order: number }[]): Promise<ActionResult<null>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new SectionService(supabase);
   const result = await service.reorder(items);
   if (!result.error) revalidatePath('/admin/sections');
@@ -42,7 +42,7 @@ export async function reorderSections(items: { id: string; sort_order: number }[
 
 export async function createSection(formData: FormData): Promise<ActionResult<Section>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new SectionService(supabase);
 
   const type = formData.get('type') as string;
@@ -96,7 +96,7 @@ export async function createSection(formData: FormData): Promise<ActionResult<Se
 
 export async function updateSection(id: string, formData: FormData): Promise<ActionResult<Section>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new SectionService(supabase);
 
   const type = formData.get('type') as string;
@@ -150,7 +150,7 @@ export async function updateSection(id: string, formData: FormData): Promise<Act
 
 export async function deleteSection(id: string): Promise<ActionResult<null>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
   const service = new SectionService(supabase);
   const result = await service.delete(id);
   if (!result.error) {

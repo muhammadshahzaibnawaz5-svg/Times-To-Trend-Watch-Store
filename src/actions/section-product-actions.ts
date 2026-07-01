@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/components/admin/require-admin';
 import type { ActionResult } from '@/types/common';
 
@@ -14,7 +14,7 @@ export interface SectionAssignment {
 
 export async function getProductSections() {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const productSectionTypes = [
     'featured_products',
@@ -39,7 +39,7 @@ export async function assignProductToSections(
   assignments: { sectionId: string; position: 'first' | 'last' }[],
 ): Promise<ActionResult<null>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   for (const assignment of assignments) {
     // Determine sort_order: first = 0, last = max+1
@@ -104,7 +104,7 @@ export async function getProductSectionAssignments(
   productId: string,
 ): Promise<ActionResult<{ sectionId: string; position: 'first' | 'last' | number }[]>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from('section_products')
@@ -128,7 +128,7 @@ export async function removeProductFromSection(
   sectionId: string,
 ): Promise<ActionResult<null>> {
   await requireAdmin();
-  const supabase = await createServerClient();
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from('section_products')
