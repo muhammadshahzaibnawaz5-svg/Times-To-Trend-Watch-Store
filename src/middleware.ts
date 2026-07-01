@@ -11,6 +11,8 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const devSession = request.cookies.get(DEV_MODE_KEY);
 
+  console.log(`[middleware] ${request.method} ${pathname} | devMode=${isDevMode()} | supabaseConfigured=${isSupabaseConfigured}`);
+
   // Rate limiting on auth paths
   if (pathname.startsWith('/admin/login')) {
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
@@ -20,27 +22,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (isSupabaseConfigured) {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return request.cookies.getAll(); },
-          setAll() {},
-        },
-      },
-    );
-    try {
-      await supabase.auth.getUser();
-    } catch {
-      // Ignore
-    }
-  }
-
   // Dev mode: skip real auth checks, use cookie
   if (isDevMode() && pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
     const isValid = devSession?.value === DEV_ADMIN.id;
+    console.log(`[middleware] dev mode admin check: cookie=${devSession?.value?.slice(0, 20)}... isValid=${isValid}`);
     if (!isValid) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
@@ -54,17 +39,24 @@ export async function middleware(request: NextRequest) {
       {
         cookies: {
           getAll() { return request.cookies.getAll(); },
-          setAll() {},
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              request.cookies.set(name, value),
+            );
+          },
         },
       },
     );
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
+      console.log(`[middleware] getUser for ${pathname}: user=${user?.email ?? 'null'} error=${error?.message ?? 'null'}`);
       if (!user) {
+        console.log(`[middleware] redirect to /admin/login — no user`);
         return NextResponse.redirect(new URL('/admin/login', request.url));
       }
-    } catch {
+    } catch (err) {
+      console.log(`[middleware] getUser exception:`, err);
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
   }

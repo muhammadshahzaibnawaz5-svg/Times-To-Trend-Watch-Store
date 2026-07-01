@@ -49,8 +49,11 @@ export async function login(formData: FormData): Promise<ActionResult<null>> {
       return { data: null, error: 'Invalid email or password' };
     }
 
+    console.log(`[login] attempting sign in with ${parsed.data.email}`);
     const supabase = await createServerClient();
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { data: signInData, error } = await supabase.auth.signInWithPassword(parsed.data);
+
+    console.log(`[login] signInWithPassword result: error=${error?.message ?? 'null'} user=${signInData?.user?.email ?? 'null'} session=${!!signInData?.session}`);
 
     if (error) return { data: null, error: error.message };
     return { data: null, error: null };
