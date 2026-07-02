@@ -60,8 +60,21 @@ export function ProductForm({ onSubmit, pending, defaultValues }: ProductFormPro
     },
   });
   useEffect(() => {
+    console.log('[ProductForm] fetching categories...');
     getActiveCategories().then((result) => {
-      if (result.data) setCategories(result.data);
+      console.log('[ProductForm] categories result:', {
+        hasData: !!result.data,
+        count: result.data?.length ?? 0,
+        error: result.error,
+        firstItem: result.data?.[0] ? { id: result.data[0].id, name: result.data[0].name } : null,
+      });
+      if (result.data && result.data.length > 0) {
+        setCategories(result.data);
+      } else {
+        console.warn('[ProductForm] no categories returned, error:', result.error);
+      }
+    }).catch((err) => {
+      console.error('[ProductForm] categories fetch failed:', err);
     }).finally(() => setCategoriesLoading(false));
   }, []);
   const imageUrls = form.watch('images')?.map((i) => i.url) ?? [];
@@ -98,8 +111,8 @@ export function ProductForm({ onSubmit, pending, defaultValues }: ProductFormPro
           name="category_id"
           label="Category"
           options={categories.map((c) => ({ value: c.id, label: c.name }))}
-          placeholder={categoriesLoading ? 'Loading categories...' : 'Select category'}
-          disabled={categoriesLoading}
+          placeholder={categoriesLoading ? 'Loading categories...' : categories.length === 0 ? 'No categories available' : 'Select category'}
+          disabled={categoriesLoading || categories.length === 0}
           required
         />{' '}
         <FormSelect
