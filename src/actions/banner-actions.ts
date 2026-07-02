@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createServerClient, createAdminClient } from '@/lib/supabase/server';
 import { createServiceAction } from '@/lib/create-service-action';
 import { bannerSchema } from '@/schemas/banner-schema';
 import { BannerService } from '@/services/banner-service';
@@ -33,7 +33,7 @@ export async function createBanner(formData: FormData): Promise<ActionResult<Ban
   console.log('[createBanner] called');
   try {
     await requireAdmin();
-    const supabase = createAdminClient();
+    const supabase = await createServerClient();
     const service = new BannerService(supabase);
 
     const imageUrl = formData.get('imageUrl') as string;

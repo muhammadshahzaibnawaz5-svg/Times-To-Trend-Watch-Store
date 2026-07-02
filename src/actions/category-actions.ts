@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createServerClient, createAdminClient } from '@/lib/supabase/server';
 import { CategoryService } from '@/services/category-service';
 import { requireAdmin } from '@/components/admin/require-admin';
 import type { ActionResult, PaginatedResult } from '@/types/common';
@@ -86,7 +86,7 @@ export async function getAllCategories() {
 }
 
 export async function getActiveCategories() {
-  const supabase = createAdminClient();
+  const supabase = await createServerClient();
   const service = new CategoryService(supabase);
   return service.getActive();
 }

@@ -315,14 +315,11 @@ export function SiteHeader({
             </Button>
 
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Open menu"
-                  className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  <Menu className="h-4 w-4" strokeWidth={1.75} />
-                </button>
+              <SheetTrigger
+                aria-label="Open menu"
+                className="inline-flex md:hidden h-10 w-10 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+              >
+                <Menu className="h-4 w-4" strokeWidth={1.75} />
               </SheetTrigger>
               <SheetContent side="right" className="bg-background w-72 p-0">
                 <SheetHeader className="border-b px-6 py-5">
