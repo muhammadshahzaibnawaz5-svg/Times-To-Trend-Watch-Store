@@ -14,7 +14,14 @@ async function CategoriesData({ searchParams }: PageProps) {
   const { page } = await searchParams;
   const supabase = createAdminClient();
   const service = new CategoryService(supabase);
-  const result = await service.getAllAdmin({ page: page ? Number(page) : 1, pageSize: 20 });
+  let result;
+  try {
+    result = await service.getAllAdmin({ page: page ? Number(page) : 1, pageSize: 20 });
+    console.log('[CategoriesData] categories count:', result.count);
+  } catch (err) {
+    console.error('[CategoriesData] query failed:', err);
+    result = { data: [], count: 0, page: 1, pageSize: 20, totalPages: 0 };
+  }
   return (
     <CategoriesTable
       categories={(result.data ?? []) as any}

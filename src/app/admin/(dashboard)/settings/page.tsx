@@ -5,10 +5,18 @@ import { PageHeader } from '@/components/admin/page-header';
 import { SettingsEditor } from './settings-editor';
 async function SettingsData() {
   const supabase = createAdminClient();
-  const { data: settings } = await supabase
-    .from('settings')
-    .select('*')
-    .order('key', { ascending: true });
+  let settings;
+  try {
+    const result = await supabase
+      .from('settings')
+      .select('*')
+      .order('key', { ascending: true });
+    settings = result.data;
+    console.log('[SettingsData] settings:', settings?.length);
+  } catch (err) {
+    console.error('[SettingsData] query failed:', err);
+    settings = [];
+  }
   return <SettingsEditor settings={settings || []} />;
 }
 export default async function AdminSettingsPage() {

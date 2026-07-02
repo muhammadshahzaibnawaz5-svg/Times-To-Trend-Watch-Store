@@ -10,7 +10,15 @@ import { MenusList } from './menus-list';
 async function MenusData() {
   const supabase = createAdminClient();
   const service = new MenuService(supabase);
-  const { data: menus } = await service.getAll();
+  let menus;
+  try {
+    const result = await service.getAll();
+    menus = result.data;
+    console.log('[MenusData] menus:', menus?.length);
+  } catch (err) {
+    console.error('[MenusData] query failed:', err);
+    menus = [];
+  }
   return <MenusList menus={(menus || []) as any} />;
 }
 export default async function AdminMenusPage() {

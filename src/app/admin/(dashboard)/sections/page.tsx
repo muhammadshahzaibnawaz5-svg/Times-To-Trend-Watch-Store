@@ -8,10 +8,18 @@ import { PageHeader } from '@/components/admin/page-header';
 import { SectionsTable } from './sections-table';
 async function SectionsData() {
   const supabase = createAdminClient();
-  const { data: sections } = await supabase
-    .from('sections')
-    .select('*')
-    .order('sort_order', { ascending: true });
+  let sections;
+  try {
+    const result = await supabase
+      .from('sections')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    sections = result.data;
+    console.log('[SectionsData] sections:', sections?.length);
+  } catch (err) {
+    console.error('[SectionsData] query failed:', err);
+    sections = [];
+  }
   return <SectionsTable sections={sections || []} />;
 }
 export default async function AdminSectionsPage() {

@@ -14,7 +14,14 @@ async function PagesData({ searchParams }: PageProps) {
   const { page } = await searchParams;
   const supabase = createAdminClient();
   const service = new PageService(supabase);
-  const result = await service.getAllAdmin(page ? Number(page) : 1, 20);
+  let result;
+  try {
+    result = await service.getAllAdmin(page ? Number(page) : 1, 20);
+    console.log('[PagesData] pages count:', result.count);
+  } catch (err) {
+    console.error('[PagesData] query failed:', err);
+    result = { data: [], count: 0, page: 1, pageSize: 20, totalPages: 0 };
+  }
   return (
     <PagesTable
       pages={(result.data ?? []) as any}

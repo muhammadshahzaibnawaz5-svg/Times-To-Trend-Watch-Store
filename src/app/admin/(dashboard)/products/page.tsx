@@ -14,12 +14,19 @@ async function ProductsData({ searchParams }: PageProps) {
   const { page, pageSize, search, status } = await searchParams;
   const supabase = createAdminClient();
   const service = new ProductService(supabase);
-  const result = await service.getAllAdmin({
-    page: page ? Number(page) : 1,
-    pageSize: pageSize ? Number(pageSize) : 20,
-    search,
-    status,
-  });
+  let result;
+  try {
+    result = await service.getAllAdmin({
+      page: page ? Number(page) : 1,
+      pageSize: pageSize ? Number(pageSize) : 20,
+      search,
+      status,
+    });
+    console.log('[ProductsData] result count:', result.count);
+  } catch (err) {
+    console.error('[ProductsData] query failed:', err);
+    result = { data: [], count: 0, page: 1, pageSize: 20, totalPages: 0 };
+  }
   return (
     <ProductsTable
       products={(result.data ?? []) as any}

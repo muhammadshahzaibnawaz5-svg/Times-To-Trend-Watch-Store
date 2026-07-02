@@ -5,10 +5,18 @@ import { PageHeader } from '@/components/admin/page-header';
 import { OrdersTable } from './orders-table';
 async function OrdersData() {
   const supabase = createAdminClient();
-  const { data: orders } = await supabase
-    .from('orders')
-    .select('*, profiles(full_name, email)')
-    .order('created_at', { ascending: false });
+  let orders;
+  try {
+    const result = await supabase
+      .from('orders')
+      .select('*, profiles(full_name, email)')
+      .order('created_at', { ascending: false });
+    orders = result.data;
+    console.log('[OrdersData] orders:', orders?.length);
+  } catch (err) {
+    console.error('[OrdersData] query failed:', err);
+    orders = [];
+  }
   return <OrdersTable orders={orders || []} />;
 }
 export default async function AdminOrdersPage() {

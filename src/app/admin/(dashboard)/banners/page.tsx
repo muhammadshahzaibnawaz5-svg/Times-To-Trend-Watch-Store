@@ -8,10 +8,18 @@ import { BannersTable } from './banners-table';
 import { requireAdmin } from '@/components/admin/require-admin';
 async function BannersData() {
   const supabase = createAdminClient();
-  const { data: banners } = await supabase
-    .from('banners')
-    .select('id, image_url, is_active, title, sort_order')
-    .order('sort_order', { ascending: true });
+  let banners;
+  try {
+    const result = await supabase
+      .from('banners')
+      .select('id, image_url, is_active, title, sort_order')
+      .order('sort_order', { ascending: true });
+    banners = result.data;
+    console.log('[BannersData] banners:', banners?.length);
+  } catch (err) {
+    console.error('[BannersData] query failed:', err);
+    banners = [];
+  }
   return <BannersTable banners={banners || []} />;
 }
 export default async function AdminBannersPage() {
