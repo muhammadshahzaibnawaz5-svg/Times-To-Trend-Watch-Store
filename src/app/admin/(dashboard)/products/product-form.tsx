@@ -35,6 +35,7 @@ interface ProductFormProps {
 }
 export function ProductForm({ onSubmit, pending, defaultValues }: ProductFormProps) {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,7 +62,7 @@ export function ProductForm({ onSubmit, pending, defaultValues }: ProductFormPro
   useEffect(() => {
     getActiveCategories().then((result) => {
       if (result.data) setCategories(result.data);
-    });
+    }).finally(() => setCategoriesLoading(false));
   }, []);
   const imageUrls = form.watch('images')?.map((i) => i.url) ?? [];
   return (
@@ -97,6 +98,8 @@ export function ProductForm({ onSubmit, pending, defaultValues }: ProductFormPro
           name="category_id"
           label="Category"
           options={categories.map((c) => ({ value: c.id, label: c.name }))}
+          placeholder={categoriesLoading ? 'Loading categories...' : 'Select category'}
+          disabled={categoriesLoading}
           required
         />{' '}
         <FormSelect
