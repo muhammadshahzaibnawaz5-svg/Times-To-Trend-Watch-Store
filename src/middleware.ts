@@ -10,6 +10,7 @@ const isSupabaseConfigured =
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const devSession = request.cookies.get(DEV_MODE_KEY);
+  const response = NextResponse.next();
 
   console.log(`[middleware] ${request.method} ${pathname} | devMode=${isDevMode()} | supabaseConfigured=${isSupabaseConfigured}`);
 
@@ -22,17 +23,20 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  const isAdminPath = pathname.startsWith('/admin');
+  const isExcludedPath = pathname.startsWith('/admin/login') || pathname.startsWith('/admin/setup');
+
   // Dev mode: skip real auth checks, use cookie
-  if (isDevMode() && pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+  if (isDevMode() && isAdminPath && !isExcludedPath) {
     const isValid = devSession?.value === DEV_ADMIN.id;
     console.log(`[middleware] dev mode admin check: cookie=${devSession?.value?.slice(0, 20)}... isValid=${isValid}`);
     if (!isValid) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
-    return NextResponse.next();
+    return response;
   }
 
-  if (isSupabaseConfigured && pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
+  if (isSupabaseConfigured && isAdminPath && !isExcludedPath) {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -41,7 +45,7 @@ export async function middleware(request: NextRequest) {
           getAll() { return request.cookies.getAll(); },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) =>
-              request.cookies.set(name, value),
+              response.cookies.set(name, value, options),
             );
           },
         },
@@ -61,7 +65,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

@@ -98,8 +98,12 @@ export function createAdminClient() {
   console.log(`[createAdminClient] url=${supabaseUrl ? 'present' : 'MISSING'} serviceKey=${serviceKey ? 'present' : 'MISSING'}`);
 
   if (!supabaseUrl || !serviceKey) {
-    console.error('[createAdminClient] SUPABASE_SERVICE_ROLE_KEY is not configured — falling back to dev mock client');
-    return createDevMockClient();
+    const missing = [];
+    if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL');
+    if (!serviceKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+    const msg = `[createAdminClient] Missing required environment variables: ${missing.join(', ')}`;
+    console.error(msg);
+    throw new Error(msg);
   }
 
   return createClient<Database>(supabaseUrl, serviceKey, {
